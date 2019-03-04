@@ -1,6 +1,12 @@
+import pyproj
 import pytest
-from pygeotile.tile import Tile
-from pygeotile.tile import Point
+
+from darkgeotile import get_Tile
+
+Tile = get_Tile(
+    pyproj.Proj(init='epsg:3857'),
+    (-20037508.342789244, -20037508.342789244, 20037508.342789244, 20037508.342789244)
+)
 
 
 @pytest.fixture(scope='module')
@@ -70,23 +76,11 @@ def test_for_pixel_chicago(chicago_pixel, chicago_zoom, chicago_tms):
     assert tile.tms == chicago_tms
 
 
-def test_for_meters_chicago(chicago_pixel, chicago_zoom, chicago_tms):
-    pixel_x, pixel_y = chicago_pixel
-    point = Point.from_pixel(pixel_x=pixel_x, pixel_y=pixel_y, zoom=chicago_zoom)
-    meter_x, meter_y = point.meters
-
+def test_for_meters_chicago(chicago_meters, chicago_zoom, chicago_tms):
+    meter_x, meter_y = chicago_meters
     tile = Tile.for_meters(meter_x=meter_x, meter_y=meter_y, zoom=chicago_zoom)
 
     assert tile.tms == chicago_tms
-
-
-def test_pixel_bounds_chicago(chicago_quad_tree, chicago_pixel_bounds):
-    tile = Tile.from_quad_tree(chicago_quad_tree)
-
-    point_min, point_max = tile.bounds
-
-    assert chicago_pixel_bounds[0] == point_min.pixels(zoom=tile.zoom)
-    assert chicago_pixel_bounds[1] == point_max.pixels(zoom=tile.zoom)
 
 
 @pytest.mark.parametrize("tms_x, tms_y, zoom, expected_min, expected_max", [
@@ -99,8 +93,11 @@ def test_tile_bounds(tms_x, tms_y, zoom, expected_min, expected_max):
     tile = Tile.from_tms(tms_x=tms_x, tms_y=tms_y, zoom=zoom)
     point_min, point_max = tile.bounds
 
-    assert point_min.latitude_longitude == pytest.approx(expected_min, abs=0.1)
-    assert point_max.latitude_longitude == pytest.approx(expected_max, abs=0.1)
+    point_min_lat_lon = Tile.projection(*point_min, inverse=True)[::-1]
+    point_max_lat_lon = Tile.projection(*point_max, inverse=True)[::-1]
+
+    assert point_min_lat_lon == pytest.approx(expected_min, abs=0.1)
+    assert point_max_lat_lon == pytest.approx(expected_max, abs=0.1)
 
 
 def test_for_latitude_longitude(chicago_latitude_longitude, chicago_zoom, chicago_tms):
@@ -108,15 +105,6 @@ def test_for_latitude_longitude(chicago_latitude_longitude, chicago_zoom, chicag
     tile = Tile.for_latitude_longitude(latitude=latitude, longitude=longitude, zoom=chicago_zoom)
 
     assert tile.tms == chicago_tms
-
-
-def test_for_point(chicago_latitude_longitude, chicago_zoom, chicago_tms):
-    latitude, longitude = chicago_latitude_longitude
-    point = Point.from_latitude_longitude(latitude=latitude, longitude=longitude)
-    tile = Tile.for_point(point=point, zoom=chicago_zoom)
-
-    assert tile.tms == chicago_tms
-    assert tile.zoom == chicago_zoom
 
 
 assert_tms = [(-1, 2), (-5, 2), (4, 2), (10, 2)]
