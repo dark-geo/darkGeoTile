@@ -3,10 +3,7 @@ import pytest
 
 from darkgeotile import get_Tile
 
-Tile = get_Tile(
-    pyproj.Proj(init='epsg:3857'),
-    (-20037508.342789244, -20037508.342789244, 20037508.342789244, 20037508.342789244)
-)
+Tile = get_Tile('+init=epsg:3857')
 
 
 @pytest.fixture(scope='module')

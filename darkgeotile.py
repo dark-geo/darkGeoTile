@@ -6,6 +6,12 @@ from typing import Tuple
 import pyproj
 
 
+KNOWN_PROJECTIONS_BOUNDS = {
+    '+units=m +init=epsg:3857': (-20037508.342789244, -20037508.342789244, 20037508.342789244, 20037508.342789244),
+    '+units=m +init=epsg:4326': (-180., -90., 180., 90.)
+}
+
+
 class BaseTile:
     # Attributes for overwriting:
     projection: pyproj.Proj
@@ -141,7 +147,13 @@ class BaseTile:
         )
 
 
-def get_Tile(projection_, proj_bounds_, tile_size_=256):
+def get_Tile(projection_, proj_bounds_=None, tile_size_=256):
+    if not isinstance(projection_, pyproj.Proj):
+        projection_ = pyproj.Proj(projection_)
+
+    if proj_bounds_ is None:
+        proj_bounds_ = KNOWN_PROJECTIONS_BOUNDS[projection_.srs]
+
     class Tile(BaseTile):
         projection = projection_
         proj_bounds = proj_bounds_
