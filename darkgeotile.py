@@ -6,9 +6,10 @@ from typing import Tuple
 
 import pyproj
 
-KNOWN_PROJECTIONS_BOUNDS = {
+DEFAULT_PROJECTIONS_BOUNDS = {
     '+units=m +init=epsg:3857': (-20037508.342789244, -20037508.342789244, 20037508.342789244, 20037508.342789244),
-    '+units=m +init=epsg:4326': (-180., -90., 180., 90.)
+    '+units=m +init=epsg:3395': (-20037508.342789244, -15496570.739723722, 20037508.342789244, 18764656.23138057),
+    '+units=m +init=epsg:4326': (-180., -90., 180., 90.),
 }
 
 
@@ -163,7 +164,7 @@ def get_Tile(projection_, proj_bounds_=None, tile_size_=256, max_zoom_=20):
         projection_ = pyproj.Proj(projection_)
 
     if proj_bounds_ is None:
-        proj_bounds_ = KNOWN_PROJECTIONS_BOUNDS[projection_.srs.rstrip()]
+        proj_bounds_ = DEFAULT_PROJECTIONS_BOUNDS[projection_.srs.rstrip()]
 
     class Tile(BaseTile):
         projection = projection_
