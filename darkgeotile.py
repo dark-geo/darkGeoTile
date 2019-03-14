@@ -1,10 +1,10 @@
 import math
+import random
 import re
 from functools import reduce
 from typing import Tuple
 
 import pyproj
-
 
 KNOWN_PROJECTIONS_BOUNDS = {
     '+units=m +init=epsg:3857': (-20037508.342789244, -20037508.342789244, 20037508.342789244, 20037508.342789244),
@@ -17,6 +17,7 @@ class BaseTile:
     projection: pyproj.Proj
     proj_bounds: Tuple[float, float, float, float]
     tile_size: int
+    max_zoom: int
 
     # Attributes created in Tile.__init_subclass__:
     min_x: float
@@ -103,6 +104,16 @@ class BaseTile:
             return cls.for_xy(longitude, latitude, zoom)
         return cls.for_xy(*cls.projection(longitude, latitude), zoom)
 
+    @classmethod
+    def get_random(cls):
+        zoom = random.randint(0, cls.max_zoom)
+        size_in_tiles = 2**zoom
+        return cls(
+            tms_x=random.randrange(size_in_tiles),
+            tms_y=random.randrange(size_in_tiles),
+            zoom=zoom
+        )
+
     @property
     def quad_tree(self):
         """Gets the tile in the Microsoft QuadTree format, converted from TMS"""
@@ -147,16 +158,17 @@ class BaseTile:
         )
 
 
-def get_Tile(projection_, proj_bounds_=None, tile_size_=256):
+def get_Tile(projection_, proj_bounds_=None, tile_size_=256, max_zoom_=20):
     if not isinstance(projection_, pyproj.Proj):
         projection_ = pyproj.Proj(projection_)
 
     if proj_bounds_ is None:
-        proj_bounds_ = KNOWN_PROJECTIONS_BOUNDS[projection_.srs]
+        proj_bounds_ = KNOWN_PROJECTIONS_BOUNDS[projection_.srs.rstrip()]
 
     class Tile(BaseTile):
         projection = projection_
         proj_bounds = proj_bounds_
         tile_size = tile_size_
+        max_zoom = max_zoom_
 
     return Tile
