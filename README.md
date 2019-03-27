@@ -14,9 +14,9 @@ there are some differences (for details look methods docs).
 
 ### Example
 ```python
-from darkgeotile import get_Tile
+from darkgeotile import get_tile_class
 
-Tile = get_Tile('+init=epsg:3857')
+Tile = get_tile_class('+init=epsg:3857')
 
 tms_x, tms_y, zoom = 134494, 329369, 19
 tile = Tile.from_tms(tms_x=tms_x, tms_y=tms_y, zoom=19)  # Tile Map Service (TMS) X Y and zoom

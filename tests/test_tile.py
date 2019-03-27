@@ -1,9 +1,8 @@
-import pyproj
 import pytest
 
-from darkgeotile import get_Tile
+from darkgeotile import get_tile_class
 
-Tile = get_Tile('+init=epsg:3857')
+Tile = get_tile_class('+init=epsg:3857')
 
 
 @pytest.fixture(scope='module')
