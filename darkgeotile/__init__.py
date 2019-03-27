@@ -1,1 +1,1 @@
-from .darkgeotile import BaseTile, get_Tile, DEFAULT_PROJECTIONS_BOUNDS
+from .darkgeotile import BaseTile, get_tile_class, DEFAULT_PROJECTIONS_BBOX

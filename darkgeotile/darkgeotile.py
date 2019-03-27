@@ -6,7 +6,7 @@ from typing import Tuple
 
 import pyproj
 
-DEFAULT_PROJECTIONS_BOUNDS = {
+DEFAULT_PROJECTIONS_BBOX = {
     '+units=m +init=epsg:3857': (-20037508.342789244, -20037508.342789244, 20037508.342789244, 20037508.342789244),
     '+units=m +init=epsg:3395': (-20037508.342789244, -15496570.739723722, 20037508.342789244, 18764656.23138057),
     '+units=m +init=epsg:4326': (-180., -90., 180., 90.),
@@ -16,7 +16,7 @@ DEFAULT_PROJECTIONS_BOUNDS = {
 class BaseTile:
     # Attributes for overwriting:
     projection: pyproj.Proj
-    proj_bounds: Tuple[float, float, float, float]
+    map_bbox: Tuple[float, float, float, float]
     tile_size: int
     max_zoom: int
 
@@ -30,10 +30,10 @@ class BaseTile:
 
     def __init_subclass__(cls, **kwargs):
         assert hasattr(cls, 'projection')
-        assert hasattr(cls, 'proj_bounds')
+        assert hasattr(cls, 'map_bbox')
         assert hasattr(cls, 'tile_size')
 
-        cls.min_x, cls.min_y, cls.max_x, cls.max_y = cls.proj_bounds
+        cls.min_x, cls.min_y, cls.max_x, cls.max_y = cls.map_bbox
         cls.x_len = cls.max_x - cls.min_x
         cls.y_len = cls.max_y - cls.min_y
 
@@ -115,6 +115,17 @@ class BaseTile:
             zoom=zoom
         )
 
+    @classmethod
+    def get_zoomlevel(cls, resolution):
+        pix_on_axis = math.ceil(cls.x_len / resolution[0]), math.ceil(cls.y_len / resolution[1])
+        max_tiles_on_axis = math.ceil(max(pix_on_axis) / cls.tile_size)
+        return math.ceil(math.log(max_tiles_on_axis, 2))
+
+    @classmethod
+    def get_resolution(cls, zoom):
+        len_in_pix = cls.tile_size * 2**zoom
+        return cls.x_len / len_in_pix, cls.y_len / len_in_pix
+
     @property
     def quad_tree(self):
         """Gets the tile in the Microsoft QuadTree format, converted from TMS"""
@@ -159,16 +170,16 @@ class BaseTile:
         )
 
 
-def get_Tile(projection_, proj_bounds_=None, tile_size_=256, max_zoom_=20):
+def get_tile_class(projection_, map_bbox_=None, tile_size_=256, max_zoom_=20):
     if not isinstance(projection_, pyproj.Proj):
         projection_ = pyproj.Proj(projection_)
 
-    if proj_bounds_ is None:
-        proj_bounds_ = DEFAULT_PROJECTIONS_BOUNDS[projection_.srs.rstrip()]
+    if map_bbox_ is None:
+        map_bbox_ = DEFAULT_PROJECTIONS_BBOX[projection_.srs.rstrip()]
 
     class Tile(BaseTile):
         projection = projection_
-        proj_bounds = proj_bounds_
+        map_bbox = map_bbox_
         tile_size = tile_size_
         max_zoom = max_zoom_
 

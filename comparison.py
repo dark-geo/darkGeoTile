@@ -4,7 +4,7 @@ import timeit
 import random
 
 
-dgtTile = darkgeotile.get_Tile('+init=epsg:3857')
+dgtTile = darkgeotile.get_tile_class('+init=epsg:3857')
 
 num = 10**5
 
